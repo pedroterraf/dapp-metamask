@@ -4,8 +4,6 @@ export const connectWallet = async (
   setAccount: React.Dispatch<React.SetStateAction<string | null>>,
   setButtonText: React.Dispatch<React.SetStateAction<string>>
 ) => {
-  console.log("Infura Project ID:", process.env.NEXT_PUBLIC_INFURA_PROJECT_ID);
-
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent);
 
