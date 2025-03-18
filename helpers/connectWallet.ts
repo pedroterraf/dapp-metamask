@@ -1,16 +1,16 @@
 import WalletConnectProvider from "@walletconnect/web3-provider";
-import { log } from "console";
 
 export const connectWallet = async (
   setAccount: React.Dispatch<React.SetStateAction<string | null>>,
   setButtonText: React.Dispatch<React.SetStateAction<string>>
 ) => {
-  console.log(process.env.API_KEY);
+  console.log("Infura Project ID:", process.env.NEXT_PUBLIC_INFURA_PROJECT_ID);
 
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent);
 
-  if (window.ethereum?.isMetaMask && !isMobile) {
-    // Modo PC: Conectar con MetaMask como siempre
+  if (window.ethereum?.isMetaMask) {
+    // PC o móvil con MetaMask integrado (Google)
     try {
       const accounts = await window.ethereum.request<string[]>({
         method: "eth_requestAccounts",
@@ -26,16 +26,18 @@ export const connectWallet = async (
       setButtonText("Connection Failed");
       return;
     }
-  } else {
-    // Modo Móvil: Usar WalletConnect
+  }
+
+  if (isMobile) {
+    // Modo Móvil: Conectar usando WalletConnect si no hay MetaMask en la web
     try {
       const provider = new WalletConnectProvider({
         rpc: {
-          1: `https://mainnet.infura.io/v3/${process.env.API_KEY}`, // Cambia con tu Infura ID
+          1: `https://mainnet.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_PROJECT_ID}`,
         },
       });
 
-      await provider.enable(); // Abre MetaMask en móvil
+      await provider.enable(); // Abre MetaMask en el móvil y conecta a la web
 
       const accounts = provider.accounts;
 
@@ -49,4 +51,15 @@ export const connectWallet = async (
       setButtonText("Connection Failed");
     }
   }
+
+  // Si no tiene MetaMask, redirigir a la tienda para instalarlo
+  setTimeout(() => {
+    if (isIos) {
+      window.location.href =
+        "https://apps.apple.com/us/app/metamask/id1438144202";
+    } else {
+      window.location.href =
+        "https://play.google.com/store/apps/details?id=io.metamask";
+    }
+  }, 3000);
 };
