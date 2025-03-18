@@ -8,7 +8,7 @@ export const connectWallet = async (
   const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent);
 
   if (window.ethereum?.isMetaMask) {
-    // PC o móvil con MetaMask integrado (Google)
+    // Conectar usando MetaMask en PC o móvil con navegador compatible
     try {
       const accounts = await window.ethereum.request<string[]>({
         method: "eth_requestAccounts",
@@ -27,37 +27,41 @@ export const connectWallet = async (
   }
 
   if (isMobile) {
-    // Modo Móvil: Conectar usando WalletConnect si no hay MetaMask en la web
     try {
       const provider = new WalletConnectProvider({
         rpc: {
           1: `https://mainnet.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_PROJECT_ID}`,
         },
+        bridge: "https://bridge.walletconnect.org",
+        qrcodeModalOptions: {
+          mobileLinks: ["metamask"], // Especificar las apps móviles compatibles
+          desktopLinks: ["metamask"], // Especificar las apps de escritorio compatibles
+        },
       });
 
-      await provider.enable(); // Abre MetaMask en el móvil y conecta a la web
+      // Habilitar WalletConnect y abrir la app
+      await provider.enable();
 
       const accounts = provider.accounts;
-
       if (accounts.length > 0) {
         setAccount(accounts[0]);
         setButtonText("Wallet Connected");
         return;
       }
     } catch (error) {
-      console.error("Error connecting wallet:", error);
+      console.error("Error connecting wallet via WalletConnect:", error);
       setButtonText("Connection Failed");
     }
   }
 
-  // Si no tiene MetaMask, redirigir a la tienda para instalarlo
+  // Si no tiene MetaMask instalado, NO redirigir inmediatamente
+  console.warn("MetaMask not found, prompting user to install.");
+
   setTimeout(() => {
     if (isIos) {
-      window.location.href =
-        "https://apps.apple.com/us/app/metamask/id1438144202";
+      window.location.href = "https://metamask.app.link/dapp/YOUR_DAPP_URL";
     } else {
-      window.location.href =
-        "https://play.google.com/store/apps/details?id=io.metamask";
+      window.location.href = "https://metamask.app.link";
     }
   }, 3000);
 };
