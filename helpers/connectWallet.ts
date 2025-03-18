@@ -8,7 +8,7 @@ export const connectWallet = async (
   const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent);
 
   if (window.ethereum?.isMetaMask) {
-    // Modo de PC o móvil con MetaMask integrado (Google)
+    // Conectar si MetaMask está instalado en la web (PC o móvil con MetaMask integrado)
     try {
       const accounts = await window.ethereum.request<string[]>({
         method: "eth_requestAccounts",
@@ -27,19 +27,17 @@ export const connectWallet = async (
   }
 
   if (isMobile) {
+    // Si estamos en móvil, usar WalletConnect para vincular MetaMask con la web
     try {
       const provider = new WalletConnectProvider({
         rpc: {
           1: `https://mainnet.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_PROJECT_ID}`,
         },
-        bridge: "https://bridge.walletconnect.org",
-        qrcodeModalOptions: {
-          mobileLinks: ["metamask"], // Especificar las apps móviles compatibles
-          desktopLinks: ["metamask"], // Especificar las apps de escritorio compatibles
-        },
+        qrcode: true, // Mostrar un código QR para que MetaMask lo lea y lo vincule
       });
 
-      await provider.enable(); // Habilitar WalletConnect y abrir la app
+      // Mostrar el código QR para que MetaMask en la app lo lea y se conecte
+      await provider.enable(); // Habilita la conexión y abrirá el código QR
 
       const accounts = provider.accounts;
       if (accounts.length > 0) {
@@ -53,23 +51,14 @@ export const connectWallet = async (
     }
   }
 
-  // Si MetaMask está instalado, intentar abrir la app directamente
-  if (isMobile) {
-    const metamaskUrl = isIos
-      ? "metamask://"
-      : "https://metamask.app.link/dapp/YOUR_DAPP_URL";
-
-    window.location.href = metamaskUrl;
-
-    // redirige a la App Store o Google Play
-    setTimeout(() => {
-      if (isIos) {
-        window.location.href =
-          "https://apps.apple.com/us/app/metamask/id1438144202";
-      } else {
-        window.location.href =
-          "https://play.google.com/store/apps/details?id=io.metamask";
-      }
-    }, 1000);
-  }
+  // Si MetaMask no está instalado, redirigir a la App Store o Google Play
+  setTimeout(() => {
+    if (isIos) {
+      window.location.href =
+        "https://apps.apple.com/us/app/metamask/id1438144202";
+    } else {
+      window.location.href =
+        "https://play.google.com/store/apps/details?id=io.metamask";
+    }
+  }, 3000);
 };
