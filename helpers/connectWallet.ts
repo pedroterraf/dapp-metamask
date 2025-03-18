@@ -8,7 +8,7 @@ export const connectWallet = async (
   const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent);
 
   if (window.ethereum?.isMetaMask) {
-    // Conectar usando MetaMask en PC o móvil con navegador compatible
+    // Modo de PC o móvil con MetaMask integrado (Google)
     try {
       const accounts = await window.ethereum.request<string[]>({
         method: "eth_requestAccounts",
@@ -39,8 +39,7 @@ export const connectWallet = async (
         },
       });
 
-      // Habilitar WalletConnect y abrir la app
-      await provider.enable();
+      await provider.enable(); // Habilitar WalletConnect y abrir la app
 
       const accounts = provider.accounts;
       if (accounts.length > 0) {
@@ -54,14 +53,23 @@ export const connectWallet = async (
     }
   }
 
-  // Si no tiene MetaMask instalado, NO redirigir inmediatamente
-  console.warn("MetaMask not found, prompting user to install.");
+  // Si MetaMask está instalado, intentar abrir la app directamente
+  if (isMobile) {
+    const metamaskUrl = isIos
+      ? "metamask://"
+      : "https://metamask.app.link/dapp/YOUR_DAPP_URL";
 
-  setTimeout(() => {
-    if (isIos) {
-      window.location.href = "https://metamask.app.link/dapp/YOUR_DAPP_URL";
-    } else {
-      window.location.href = "https://metamask.app.link";
-    }
-  }, 3000);
+    window.location.href = metamaskUrl;
+
+    // redirige a la App Store o Google Play
+    setTimeout(() => {
+      if (isIos) {
+        window.location.href =
+          "https://apps.apple.com/us/app/metamask/id1438144202";
+      } else {
+        window.location.href =
+          "https://play.google.com/store/apps/details?id=io.metamask";
+      }
+    }, 1000);
+  }
 };
